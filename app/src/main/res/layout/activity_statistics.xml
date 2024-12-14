@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:fillViewport="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Back Button -->
+        <!-- Back Button -->
+        <Button
+            android:id="@+id/btnBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"
+            android:padding="8dp"
+            android:drawableLeft="@drawable/ic_arrow_back"
+            android:gravity="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginBottom="16dp" />
+
+
+        <!-- Total Tasks TextView -->
+        <TextView
+            android:id="@+id/tvTotalTasks"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Total Tasks: 0"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintTop_toBottomOf="@id/btnBack"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp" />
+
+        <!-- Completed Tasks TextView -->
+        <TextView
+            android:id="@+id/tvCompletedTasks"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Completed Tasks: 0"
+            android:textSize="16sp"
+            app:layout_constraintTop_toBottomOf="@id/tvTotalTasks"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="8dp" />
+
+        <!-- Ongoing Tasks TextView -->
+        <TextView
+            android:id="@+id/tvOngoingTasks"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Ongoing Tasks: 0"
+            android:textSize="16sp"
+            app:layout_constraintTop_toBottomOf="@id/tvCompletedTasks"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="8dp" />
+
+        <!-- PieChart for Completion Status -->
+        <com.github.mikephil.charting.charts.PieChart
+            android:id="@+id/pieChartCompletionStatus"
+            android:layout_width="0dp"
+            android:layout_height="300dp"
+            app:layout_constraintTop_toBottomOf="@id/tvOngoingTasks"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp" />
+
+        <!-- PieChart for Priority Distribution -->
+        <com.github.mikephil.charting.charts.PieChart
+            android:id="@+id/pieChartPriority"
+            android:layout_width="0dp"
+            android:layout_height="300dp"
+            app:layout_constraintTop_toBottomOf="@id/pieChartCompletionStatus"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

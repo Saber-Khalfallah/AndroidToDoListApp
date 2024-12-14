@@ -1,14 +1,15 @@
 package com.example.todolistapp
+
 import java.io.Serializable
 
 data class Task(
-    var id: String = "", // Task ID
+    var id: String? = null,
     var title: String = "",
     var description: String = "",
-    var priority: String = "",
+    var priority: Int = 0,  // 1 = Low, 2 = Medium, 3 = High
     var deadline: String = "",
     var emailNotification: Boolean = false,
-    var completed: Boolean = false,  // Make sure it's 'completed' (not 'isCompleted')
-    var timestamp: Long = 0L,
-    var userId: String = ""
+    var userId: String? = null,
+    var completed: Boolean = false,
+    var timestamp: Long = 0
 ) : Serializable

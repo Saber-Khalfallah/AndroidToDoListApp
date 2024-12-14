@@ -11,7 +11,10 @@
         android:id="@+id/tabLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@+id/addTaskButton"
+        app:layout_constraintTop_toTopOf="parent"
         app:tabMode="fixed"
+
         app:tabSelectedTextColor="@android:color/black"
         app:tabTextColor="@android:color/darker_gray" />
 
@@ -30,7 +33,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Add Task"
-        app:layout_constraintBottom_toTopOf="@+id/statsButton"
+        app:layout_constraintBottom_toTopOf="@+id/btnShowStatistics"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp"
@@ -38,7 +41,7 @@
 
     <!-- View Statistics Button -->
     <Button
-        android:id="@+id/statsButton"
+        android:id="@+id/btnShowStatistics"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="View Statistics"

@@ -3,8 +3,11 @@ package com.example.todolistapp
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Bundle
-import android.widget.*
+import android.util.Log
+import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.todolistapp.databinding.ActivityAddTaskBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -13,12 +16,7 @@ import java.util.*
 
 class AddTaskActivity : AppCompatActivity() {
 
-    private lateinit var etTaskTitle: EditText
-    private lateinit var etTaskDescription: EditText
-    private lateinit var spinnerPriority: Spinner
-    private lateinit var btnPickDeadline: Button
-    private lateinit var checkBoxEmailNotification: CheckBox
-    private lateinit var btnSaveTask: Button
+    private lateinit var binding: ActivityAddTaskBinding
     private lateinit var auth: FirebaseAuth
     private lateinit var database: DatabaseReference
 
@@ -26,33 +24,32 @@ class AddTaskActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_add_task)
+        // Initialize View Binding
+        binding = ActivityAddTaskBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         // Initialize Firebase
         auth = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance("https://todolistapp-259e9-default-rtdb.europe-west1.firebasedatabase.app/").reference
 
-        // Initialize views
-        etTaskTitle = findViewById(R.id.etTaskTitle)
-        etTaskDescription = findViewById(R.id.etTaskDescription)
-        spinnerPriority = findViewById(R.id.spinnerPriority)
-        btnPickDeadline = findViewById(R.id.btnPickDeadline)
-        checkBoxEmailNotification = findViewById(R.id.checkBoxEmailNotification)
-        btnSaveTask = findViewById(R.id.btnSaveTask)
-
         // Set up priority spinner
         val priorities = arrayOf("Low", "Medium", "High")
+        val priorityValues = arrayOf(1, 2, 3) // Map "Low" to 1, "Medium" to 2, "High" to 3
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, priorities)
-        spinnerPriority.adapter = adapter
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerPriority.adapter = adapter
 
         // Set up deadline picker
-        btnPickDeadline.setOnClickListener {
+        binding.btnPickDeadline.setOnClickListener {
             pickDeadline()
         }
 
         // Save task
-        btnSaveTask.setOnClickListener {
-            saveTask()
+        binding.btnSaveTask.setOnClickListener {
+            saveTask(priorityValues[binding.spinnerPriority.selectedItemPosition])
+        }
+        binding.btnCancelTask.setOnClickListener {
+            cancelAddTask()
         }
     }
 
@@ -63,16 +60,15 @@ class AddTaskActivity : AppCompatActivity() {
                 calendar.set(year, month, dayOfMonth, hourOfDay, minute)
                 val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
                 selectedDeadline = dateFormat.format(calendar.time)
-                btnPickDeadline.text = selectedDeadline
+                binding.btnPickDeadline.text = selectedDeadline
             }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true).show()
         }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
     }
 
-    private fun saveTask() {
-        val title = etTaskTitle.text.toString()
-        val description = etTaskDescription.text.toString()
-        val priority = spinnerPriority.selectedItem.toString()
-        val emailNotification = checkBoxEmailNotification.isChecked
+    private fun saveTask(priority: Int) {
+        val title = binding.etTaskTitle.text.toString().trim()
+        val description = binding.etTaskDescription.text.toString().trim()
+        val emailNotification = binding.checkBoxEmailNotification.isChecked
 
         if (title.isEmpty() || description.isEmpty() || selectedDeadline == null) {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
@@ -84,12 +80,17 @@ class AddTaskActivity : AppCompatActivity() {
             // Get a unique task ID and create the Task object
             val taskId = database.child("tasks").child(userId).push().key
 
+            if (taskId == null) {
+                Toast.makeText(this, "Failed to generate task ID", Toast.LENGTH_SHORT).show()
+                return
+            }
+
             // Create the task with additional fields: userId, isCompleted, and timestamp
             val task = Task(
-                id = taskId ?: "",  // Ensure the task has a non-null ID
+                id = taskId, // Ensure the task has a non-null ID
                 title = title,
                 description = description,
-                priority = priority,
+                priority = priority, // Int value: 1=Low, 2=Medium, 3=High
                 deadline = selectedDeadline!!,
                 emailNotification = emailNotification,
                 userId = userId,         // Link the task to the current user
@@ -98,17 +99,23 @@ class AddTaskActivity : AppCompatActivity() {
             )
 
             // Save the task to Firebase Realtime Database
-            if (taskId != null) {
-                database.child("tasks").child(userId).child(taskId).setValue(task)
-                    .addOnCompleteListener {
-                        if (it.isSuccessful) {
-                            Toast.makeText(this, "Task saved successfully", Toast.LENGTH_SHORT).show()
-                            finish() // Close the activity
-                        } else {
-                            Toast.makeText(this, "Failed to save task", Toast.LENGTH_SHORT).show()
-                        }
+            database.child("tasks").child(userId).child(taskId).setValue(task)
+                .addOnCompleteListener { taskResult ->
+                    if (taskResult.isSuccessful) {
+                        Toast.makeText(this, "Task saved successfully", Toast.LENGTH_SHORT).show()
+                        finish() // Close the activity
+                    } else {
+                        Toast.makeText(this, "Failed to save task", Toast.LENGTH_SHORT).show()
+                        Log.e("AddTaskActivity", "Failed to save task", taskResult.exception)
                     }
-            }
+                }
+        } else {
+            Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show()
+            Log.e("AddTaskActivity", "User ID is null")
         }
+    }
+    private fun cancelAddTask() {
+        // Optionally, show a confirmation dialog before cancelling
+        finish() // Close the activity without saving
     }
 }

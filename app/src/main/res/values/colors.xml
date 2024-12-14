@@ -7,6 +7,20 @@
     <color name="blue_3">#64A1F4</color>
     <color name="blue_4">#4A91F2</color>
     <color name="blue_5">#3B7DD8</color>
+    <color name="purple_500">#6200EE</color>
+    <color name="purple_700">#3700B3</color>
+    <color name="teal_200">#03DAC5</color>
+    <color name="teal_700">#018786</color>
+    <color name="red_700">#D32F2F</color>
+    <color name="gray_500">#9E9E9E</color>
+    <color name="colorPrimary">#6200EE</color>
+    <color name="colorPrimaryVariant">#3700B3</color>
+    <color name="colorAccent">#03DAC5</color>
     <color name="card_graph_bg_color">#4A91F2</color>
     <color name="graph_heading_color">#FFFFFF</color>
+    <color name="pie_completed">#4CAF50</color> <!-- Green -->
+    <color name="pie_ongoing">#F44336</color>   <!-- Red -->
+    <color name="pie_low">#2196F3</color>       <!-- Blue -->
+    <color name="pie_medium">#FFC107</color>    <!-- Amber -->
+    <color name="pie_high">#FF5722</color>      <!-- Deep Orange -->
 </resources>

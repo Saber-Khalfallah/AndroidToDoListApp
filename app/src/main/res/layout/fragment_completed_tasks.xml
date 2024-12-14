@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,4 +12,15 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="16dp" />
+
+    <!-- TextView to display when there are no completed tasks -->
+    <TextView
+        android:id="@+id/tvEmptyCompletedTasks"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No completed tasks available."
+        android:textSize="16sp"
+        android:textColor="@android:color/darker_gray"
+        android:visibility="gone"
+        android:layout_gravity="center" />
 </FrameLayout>

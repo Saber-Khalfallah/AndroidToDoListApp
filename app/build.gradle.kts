@@ -58,7 +58,14 @@ dependencies {
     implementation(libs.google.firebase.auth)
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation(libs.com.google.firebase.firebase.auth)
+    implementation(libs.mpandroidchart)
 
+
+    // (Java only)
+    implementation(libs.androidx.work.runtime)
+
+    // Kotlin + coroutines
+    implementation(libs.androidx.work.runtime.ktx)
     // Also add the dependency for the Google Play services library and specify its version
     implementation(libs.play.services.auth)
     implementation(libs.firebase.database)

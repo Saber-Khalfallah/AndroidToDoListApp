@@ -1,3 +1,4 @@
+// OngoingTasksFragment.kt
 package com.example.todolistapp
 
 import android.content.Intent
@@ -22,6 +23,9 @@ class OngoingTasksFragment : Fragment() {
 
     private var userId: String? = null
     private var isCompleted: Boolean = false
+
+    // Reference to the ChildEventListener to manage its lifecycle
+    private var childEventListener: ChildEventListener? = null
 
     companion object {
         private const val ARG_USER_ID = "user_id"
@@ -73,6 +77,20 @@ class OngoingTasksFragment : Fragment() {
         fetchTasks()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Clear existing tasks to avoid duplicates
+        taskAdapter.clearTasks()
+        // Re-fetch tasks from the database
+        fetchTasks()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Remove the listener to prevent memory leaks
+        removeTasksListener()
+    }
+
     private fun fetchTasks() {
         userId?.let { id ->
             // Create a query to get tasks for the current user
@@ -81,8 +99,8 @@ class OngoingTasksFragment : Fragment() {
             // Filter tasks based on their completion status
             val query: Query = tasksRef.orderByChild("completed").equalTo(isCompleted)
 
-            // Use a ChildEventListener to listen for changes in the database
-            query.addChildEventListener(object : ChildEventListener {
+            // Initialize the ChildEventListener
+            childEventListener = object : ChildEventListener {
                 override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
                     val task = snapshot.getValue(Task::class.java)
                     task?.let {
@@ -110,18 +128,40 @@ class OngoingTasksFragment : Fragment() {
                     }
                 }
 
-                override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
+                override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
+                    // Not used in this context
+                }
 
                 override fun onCancelled(error: DatabaseError) {
                     Log.e("Firebase", "Error fetching tasks: ${error.message}")
+                    Toast.makeText(requireContext(), "Failed to load tasks", Toast.LENGTH_SHORT).show()
                 }
-            })
+            }
+
+            // Add the listener to the query
+            query.addChildEventListener(childEventListener!!)
+        } ?: run {
+            // Handle null userId
+            Toast.makeText(requireContext(), "User ID not found", Toast.LENGTH_SHORT).show()
+            Log.e("OngoingTasksFragment", "User ID is null")
+        }
+    }
+
+    private fun removeTasksListener() {
+        userId?.let { id ->
+            childEventListener?.let { listener ->
+                database.child("tasks").child(id).removeEventListener(listener)
+                childEventListener = null
+            }
         }
     }
 
     private fun completeTask(task: Task) {
         // Ensure task.id is non-null before using it
-        val taskId = task.id ?: return  // If id is null, don't proceed
+        val taskId = task.id ?: run {
+            Toast.makeText(requireContext(), "Task ID is null", Toast.LENGTH_SHORT).show()
+            return
+        }
 
         task.completed = true
         userId?.let { userId ->
@@ -138,6 +178,9 @@ class OngoingTasksFragment : Fragment() {
                     Log.e("Firebase", "Failed to complete task: ${task.title}")
                     Toast.makeText(requireContext(), "Failed to mark task as completed", Toast.LENGTH_SHORT).show()
                 }
+        } ?: run {
+            Toast.makeText(requireContext(), "User ID is null", Toast.LENGTH_SHORT).show()
+            Log.e("OngoingTasksFragment", "User ID is null")
         }
     }
 
@@ -150,7 +193,10 @@ class OngoingTasksFragment : Fragment() {
 
     private fun deleteTask(task: Task) {
         // Ensure task.id is non-null before using it
-        val taskId = task.id ?: return  // If id is null, don't proceed
+        val taskId = task.id ?: run {
+            Toast.makeText(requireContext(), "Task ID is null", Toast.LENGTH_SHORT).show()
+            return
+        }
 
         userId?.let { userId ->
             // Use task.id here, since we've ensured it's non-null
@@ -166,12 +212,16 @@ class OngoingTasksFragment : Fragment() {
                     Log.e("Firebase", "Failed to delete task: ${task.title}")
                     Toast.makeText(requireContext(), "Failed to delete task", Toast.LENGTH_SHORT).show()
                 }
+        } ?: run {
+            Toast.makeText(requireContext(), "User ID is null", Toast.LENGTH_SHORT).show()
+            Log.e("OngoingTasksFragment", "User ID is null")
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // Remove the listener to prevent memory leaks
+        removeTasksListener()
         binding = null
     }
 }
-

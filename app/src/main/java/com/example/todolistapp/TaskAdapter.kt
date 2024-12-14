@@ -1,6 +1,6 @@
 package com.example.todolistapp
 
-import android.content.Intent
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,8 +8,6 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
 
 class TaskAdapter(
     private val onCompleteClick: (Task) -> Unit,
@@ -18,7 +16,6 @@ class TaskAdapter(
 ) : RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
 
     private val tasks = mutableListOf<Task>()
-    private val database: DatabaseReference = FirebaseDatabase.getInstance().reference
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_task, parent, false)
@@ -32,25 +29,49 @@ class TaskAdapter(
 
     override fun getItemCount(): Int = tasks.size
 
+    /**
+     * Adds a new task to the adapter.
+     */
     fun addTask(task: Task) {
-        tasks.add(task)
-        notifyItemInserted(tasks.size - 1)
+        // Avoid adding duplicate tasks based on unique ID
+        if (tasks.none { it.id == task.id }) {
+            tasks.add(task)
+            notifyItemInserted(tasks.size - 1)
+            Log.d("TaskAdapter", "Added task: ${task.title} with ID: ${task.id}")
+        }
     }
 
+    /**
+     * Updates an existing task in the adapter.
+     */
     fun updateTask(task: Task) {
-        val index = tasks.indexOfFirst { it.title == task.title }
+        val index = tasks.indexOfFirst { it.id == task.id }
         if (index != -1) {
             tasks[index] = task
             notifyItemChanged(index)
+            Log.d("TaskAdapter", "Updated task: ${task.title} with ID: ${task.id}")
         }
     }
 
+    /**
+     * Removes a task from the adapter.
+     */
     fun removeTask(task: Task) {
-        val index = tasks.indexOfFirst { it.title == task.title }
+        val index = tasks.indexOfFirst { it.id == task.id }
         if (index != -1) {
             tasks.removeAt(index)
             notifyItemRemoved(index)
+            Log.d("TaskAdapter", "Removed task: ${task.title} with ID: ${task.id}")
         }
+    }
+
+    /**
+     * Clears all tasks from the adapter.
+     */
+    fun clearTasks() {
+        tasks.clear()
+        notifyDataSetChanged()
+        Log.d("TaskAdapter", "Cleared all tasks")
     }
 
     inner class TaskViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -68,64 +89,26 @@ class TaskAdapter(
             taskPriority.text = "Priority: ${task.priority}"
             taskDeadline.text = "Deadline: ${task.deadline}"
 
+            // Optionally hide the "Complete" button if the task is already completed
+            btnComplete.visibility = if (task.completed) View.GONE else View.VISIBLE
+
             // Handle button clicks for task completion, edit, and deletion
 
             btnComplete.setOnClickListener {
-                // Mark the task as completed in the UI
-                task.completed = true
-                onCompleteClick(task)  // Trigger the complete action (e.g., update in Firebase)
-                // Show confirmation toast
+                onCompleteClick(task)  // Delegate completion action to the fragment
+                // Optionally, you can update the UI immediately
+                btnComplete.visibility = View.GONE
                 Toast.makeText(itemView.context, "Task marked as completed", Toast.LENGTH_SHORT).show()
             }
 
             btnEdit.setOnClickListener {
-                val intent = Intent(it.context, EditTaskActivity::class.java)
-                intent.putExtra("taskId", task.id)
-                intent.putExtra("taskTitle", task.title)
-                intent.putExtra("taskDescription", task.description)
-                intent.putExtra("taskPriority", task.priority)
-                intent.putExtra("taskDeadline", task.deadline)
-                intent.putExtra("taskEmailNotification", task.emailNotification)
-                it.context.startActivity(intent)
+                onEditClick(task)  // Delegate edit action to the fragment
             }
 
             btnDelete.setOnClickListener {
-                onDeleteClick(task)  // Trigger the delete action (remove from the list)
-                removeTask(task)  // Remove from the local list
-                deleteTaskFromFirebase(task)  // Also delete from Firebase
-                // Show confirmation toast
+                onDeleteClick(task)  // Delegate delete action to the fragment
                 Toast.makeText(itemView.context, "Task deleted", Toast.LENGTH_SHORT).show()
             }
-        }
-
-        private fun updateTaskStatus(task: Task) {
-            val userId = "current_user_id"  // Replace with actual user ID logic
-            val taskId = task.id  // Assuming task has an 'id' field for its unique identifier in Firebase
-
-            // Update the task's completion status in Firebase
-            database.child("tasks").child(userId).child(taskId).child("isCompleted").setValue(true)
-                .addOnCompleteListener {
-                    if (it.isSuccessful) {
-                        // Task status updated successfully
-                    } else {
-                        // Handle error
-                    }
-                }
-        }
-
-        private fun deleteTaskFromFirebase(task: Task) {
-            val userId = "current_user_id"  // Replace with actual user ID logic
-            val taskId = task.id  // Assuming task has an 'id' field for its unique identifier in Firebase
-
-            // Delete the task from Firebase
-            database.child("tasks").child(userId).child(taskId).removeValue()
-                .addOnCompleteListener {
-                    if (it.isSuccessful) {
-                        // Task deleted successfully
-                    } else {
-                        // Handle error
-                    }
-                }
         }
     }
 }
